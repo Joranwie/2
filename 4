@@ -1,0 +1,48 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract CustomProofProblem {
+    uint256 public nonce;
+    string public requiredSubstring;
+
+    event NewNonce(uint256 nonce);
+
+    constructor(string memory _requiredSubstring) {
+        requiredSubstring = _requiredSubstring;
+    }
+
+    function mine(uint256 _nonce) external {
+        bytes32 hash = keccak256(abi.encodePacked(_nonce));
+        require(containsSubstring(hash, requiredSubstring), "Proof of work not satisfied");
+
+        nonce = _nonce;
+        emit NewNonce(nonce);
+    }
+
+    function containsSubstring(bytes32 _haystack, string memory _needle) internal pure returns (bool) {
+        bytes memory haystackBytes = bytes32ToBytes(_haystack);
+        bytes memory needleBytes = bytes(_needle);
+
+        for (uint256 i = 0; i <= haystackBytes.length - needleBytes.length; i++) {
+            bool found = true;
+            for (uint256 j = 0; j < needleBytes.length; j++) {
+                if (haystackBytes[i + j] != needleBytes[j]) {
+                    found = false;
+                    break;
+                }
+            }
+            if (found) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function bytes32ToBytes(bytes32 _data) internal pure returns (bytes memory) {
+        bytes memory result = new bytes(32);
+        for (uint256 i = 0; i < 32; i++) {
+            result[i] = _data[i];
+        }
+        return result;
+    }
+}
